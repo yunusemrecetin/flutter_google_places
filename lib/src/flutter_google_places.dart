@@ -369,9 +369,41 @@ class PredictionTile extends StatelessWidget {
   const PredictionTile({Key? key, required this.prediction, this.onTap})
       : super(key: key);
 
+      fetch(Prediction p) async {
+        GoogleMapsPlaces _places = GoogleMapsPlaces(
+      apiKey: "AIzaSyCdXBCrlVj_sPuCcw2-sCDPwJCTAiHo3ZU",
+      apiHeaders: await GoogleApiHeaders().getHeaders(),
+      baseUrl:
+          "https://cross-project.herokuapp.com/https://maps.googleapis.com/maps/api",
+    );
+
+    return await _places.getDetailsByPlaceId(p.placeId!);
+      }
+
   @override
   Widget build(BuildContext context) {
-    return ListTile(
+    List<String> _postalCodes = ["10115", "10117", "10119", "10178", "10179", "10435"];
+
+return FutureBuilder(
+    builder: (context, projectSnap) {
+      switch (projectSnap.connectionState) {
+        case ConnectionState.none: return SizedBox.shrink();
+
+          case ConnectionState.active: return SizedBox.shrink();
+
+          case ConnectionState.done:
+          PlacesDetailsResponse? _data = projectSnap.data as PlacesDetailsResponse;
+      AddressComponent? addressComponent;
+
+      try{
+        addressComponent = _data.result.addressComponents.firstWhere((element) => (element.types.contains("postal_code") && _postalCodes.contains(element.longName)), orElse: null,);
+      }catch(e){
+        print(e);
+      }
+
+      if(null == addressComponent) return SizedBox.shrink();
+
+      return ListTile(
       leading: const Icon(Icons.location_on),
       title: Text(
         prediction.description!,
@@ -383,6 +415,15 @@ class PredictionTile extends StatelessWidget {
         }
       },
     );
+
+  
+
+          case ConnectionState.waiting: return SizedBox.shrink();
+          default: return SizedBox.shrink();
+      }
+    },
+    future: fetch(prediction),
+  );
   }
 }
 
